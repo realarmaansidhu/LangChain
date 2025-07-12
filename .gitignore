@@ -1,2 +1,11 @@
-.env
+# Ignore Python virtual environments and dependencies
 environ/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.venv
+.env
+*.egg-info/
+deeplake/
