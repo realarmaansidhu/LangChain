@@ -9,3 +9,5 @@ __pycache__/
 .env
 *.egg-info/
 deeplake/
+lib/
+Module-3: Learning How to Prompt/9-Project: Improved News Article Summarizer/
