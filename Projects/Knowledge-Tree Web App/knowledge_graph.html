@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "Justin Pierre James Trudeau", "label": "Justin Pierre James Trudeau", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Ottawa", "label": "Ottawa", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Ontario", "label": "Ontario", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Canada", "label": "Canada", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Liberal Party", "label": "Liberal Party", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Parliament", "label": "Parliament", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Papineau", "label": "Papineau", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Pierre Trudeau", "label": "Pierre Trudeau", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Coll\u00e8ge Jean-de-Br\u00e9beuf", "label": "Coll\u00e8ge Jean-de-Br\u00e9beuf", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "McGill University", "label": "McGill University", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "University of British Columbia", "label": "University of British Columbia", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Vancouver", "label": "Vancouver", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Katimavik", "label": "Katimavik", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Canadian Avalanche Association", "label": "Canadian Avalanche Association", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Liberal Party\u0027s Task Force on Youth Renewal", "label": "Liberal Party\u0027s Task Force on Youth Renewal", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": "Montreal", "label": "Montreal", "shape": "dot", "size": 10}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "was born in", "to": "Ottawa", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "was born in", "to": "Ontario", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "is the prime minister of", "to": "Canada", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "led", "to": "Liberal Party", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "is a member of", "to": "Parliament", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "represents", "to": "Papineau", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "is the son of", "to": "Pierre Trudeau", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "attended", "to": "Coll\u00e8ge Jean-de-Br\u00e9beuf", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "graduated from", "to": "McGill University", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "graduated from", "to": "University of British Columbia", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "taught in", "to": "Vancouver", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "is the chair of", "to": "Katimavik", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "is the director of", "to": "Canadian Avalanche Association", "width": 1}, {"arrows": "to", "from": "Justin Pierre James Trudeau", "label": "is the chair of", "to": "Liberal Party\u0027s Task Force on Youth Renewal", "width": 1}, {"arrows": "to", "from": "Ottawa", "label": "is located in", "to": "Ontario", "width": 1}, {"arrows": "to", "from": "Ontario", "label": "has a city", "to": "Ottawa", "width": 1}, {"arrows": "to", "from": "Canada", "label": "has a prime minister", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Canada", "label": "has a province", "to": "Ontario", "width": 1}, {"arrows": "to", "from": "Canada", "label": "has a city", "to": "Vancouver", "width": 1}, {"arrows": "to", "from": "Canada", "label": "has a city", "to": "Montreal", "width": 1}, {"arrows": "to", "from": "Liberal Party", "label": "has a member", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Papineau", "label": "is represented by", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Pierre Trudeau", "label": "is the prime minister of", "to": "Canada", "width": 1}, {"arrows": "to", "from": "Pierre Trudeau", "label": "is the father of", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Coll\u00e8ge Jean-de-Br\u00e9beuf", "label": "has an alumnus", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "McGill University", "label": "has an alumnus", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "University of British Columbia", "label": "has an alumnus", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Vancouver", "label": "is located in", "to": "Canada", "width": 1}, {"arrows": "to", "from": "Katimavik", "label": "has a chair", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Canadian Avalanche Association", "label": "has a director", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Liberal Party\u0027s Task Force on Youth Renewal", "label": "has a chair", "to": "Justin Pierre James Trudeau", "width": 1}, {"arrows": "to", "from": "Montreal", "label": "is located in", "to": "Canada", "width": 1}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"barnesHut": {"springLength": 250, "springConstant": 0.01, "avoidOverlap": 1}}, "nodes": {"font": {"size": 20}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
