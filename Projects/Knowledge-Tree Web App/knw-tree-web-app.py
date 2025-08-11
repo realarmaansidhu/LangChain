@@ -2,7 +2,7 @@ import os
 import tempfile
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
-from langchain_groq import ChatGroq as Groq
+from langchain_google_genai import ChatGoogleGenerativeAI as Gemini
 from pyvis.network import Network
 import networkx as nx
 import re
@@ -11,11 +11,11 @@ import streamlit.components.v1 as components
 
 # Load environment variables
 load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY")
-os.environ["GROQ_API_KEY"] = groq_api_key
+google_api_key = os.getenv("GOOGLE_API_KEY")
+os.environ["GOOGLE_API_KEY"] = google_api_key
 
 # LLM and prompt
-llm = Groq(model="llama-3.3-70b-versatile", temperature=0)
+llm = Gemini(model="models/gemini-1.5-flash-latest", temperature=0)
 prompt_template = """
 Extract all possible factual knowledge triples from the text below.
 Each triple must be in the format: (subject, predicate, object).
@@ -36,6 +36,23 @@ Output:
 """
 prompt = PromptTemplate(input_variables=["text"], template=prompt_template)
 chain = prompt | llm
+
+normalization_prompt = PromptTemplate(
+    input_variables=["original_text", "triples"],
+    template="""
+Input Text:
+{original_text}
+
+Extracted triples:
+{triples}
+
+Task:
+Unify all entities in the triples that refer to the same real-world entity, using the context of the input text.
+Output the updated triples in the same format: (subject, predicate, object), separated by commas.
+If no changes needed, output the triples as-is.
+"""
+)
+normalization_chain = normalization_prompt | llm
 
 # Streamlit UI
 st.title("Knowledge Tree Web App")
@@ -73,10 +90,10 @@ if st.button("Generate Knowledge Graph"):
         chunks = chunk_text(user_text)
         with st.spinner("Processing text and extracting triples..."):
             for i, chunk in enumerate(chunks):
-                st.write(f"Processing chunk {i+1} of {len(chunks)}")
+                st.write(f"Processing chunk {i+1} of {len(chunks)} ✅")
                 response = chain.invoke({"text": chunk})
                 extracted_triples = response.content
-                st.write("**Raw LLM output for chunk:**", extracted_triples)
+                print("**Raw LLM output for chunk:**", extracted_triples)
                 triples = parse_triples(extracted_triples)
                 for triple in triples:
                     all_triples_set.add(triple)
@@ -84,8 +101,14 @@ if st.button("Generate Knowledge Graph"):
             st.info("No valid triples extracted.")
         else:
             triples = list(all_triples_set)
+            triples_str = ", ".join([f"({subj}, {pred}, {obj})" for subj, pred, obj in triples])
+            normalization_response = normalization_chain.invoke({"original_text": user_text, "triples": triples_str})
+            normalized_triples_str = normalization_response.content
+            st.write("**Normalized triples output✅**")
+            print("**Normalized triples output:**", normalized_triples_str)
+            normalized_triples = parse_triples(normalized_triples_str)
             G = nx.DiGraph()
-            for subj, pred, obj in triples:
+            for subj, pred, obj in normalized_triples:
                 G.add_edge(subj.strip(), obj.strip(), label=pred.strip())
             net = Network(height="600px", width="100%", notebook=False, directed=True, cdn_resources='remote')
             net.from_nx(G)
@@ -112,6 +135,7 @@ if st.button("Generate Knowledge Graph"):
             with open(tmp_file_path, "r", encoding="utf-8") as f:
                 net_html = f.read()
             components.html(net_html, height=800, width=900, scrolling=True)
-            st.write("**Nodes:**", list(G.nodes()))
-            st.write("**Edges:**", list(G.edges(data=True)))
-            st.write("**Triples:**", triples)
+            with st.expander("Show extracted nodes, edges, and triples"):
+                st.write("**Nodes:**", list(G.nodes()))
+                st.write("**Edges:**", list(G.edges(data=True)))
+                st.write("**Triples:**", normalized_triples)
