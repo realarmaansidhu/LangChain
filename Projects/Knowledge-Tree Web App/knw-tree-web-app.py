@@ -2,7 +2,7 @@ import os
 import tempfile
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI as Gemini
+from langchain_mistralai import ChatMistralAI as Mistral
 from pyvis.network import Network
 import networkx as nx
 import re
@@ -11,11 +11,10 @@ import streamlit.components.v1 as components
 
 # Load environment variables
 load_dotenv()
-google_api_key = os.getenv("GOOGLE_API_KEY")
-os.environ["GOOGLE_API_KEY"] = google_api_key
+print("Loaded Mistral API key:", os.getenv("MISTRAL_API_KEY"))
 
 # LLM and prompt
-llm = Gemini(model="models/gemini-1.5-flash-latest", temperature=0)
+llm = Mistral(model_name="mistral-tiny", temperature=0.7)
 prompt_template = """
 Extract all possible factual knowledge triples from the text below.
 Each triple must be in the format: (subject, predicate, object).
@@ -81,13 +80,42 @@ def chunk_text(text, max_chunk_size=1000):
     if current_chunk:
         chunks.append(current_chunk)
     return chunks
+# *
+def split_text_for_summarization(text, n_chunks=10):
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    avg = len(sentences) // n_chunks
+    chunks = []
+    for i in range(n_chunks):
+        start = i * avg
+        end = (i + 1) * avg if i < n_chunks - 1 else len(sentences)
+        chunk = " ".join(sentences[start:end])
+        if chunk.strip():
+            chunks.append(chunk)
+    return chunks
+# *
+SUMMARY_CHUNK_THRESHOLD = 10
 
 if st.button("Generate Knowledge Graph"):
     if not user_text.strip():
         st.warning("Please enter some text to process.")
     else:
-        all_triples_set = set()
         chunks = chunk_text(user_text)
+        if len(chunks) > SUMMARY_CHUNK_THRESHOLD:
+            st.write("Summarizing the Input ...")
+            summary_chunks = []
+            split_chunks = split_text_for_summarization(user_text, n_chunks=SUMMARY_CHUNK_THRESHOLD)
+            summary_prompt = PromptTemplate(
+                input_variables=["text"],
+                template="Summarize the following text in detail, preserving all key facts, events, people, organizations, and relationships:\n\n{text}\n\nSummary:"
+            )
+            summary_chain = summary_prompt | llm
+            for i, chunk in enumerate(split_chunks):
+                summary_response = summary_chain.invoke({"text": chunk})
+                summary_text = summary_response.content
+                summary_chunks.append(summary_text)
+            st.write("Summarized the Input ✅")
+            chunks = summary_chunks
+        all_triples_set = set()
         with st.spinner("Processing text and extracting triples..."):
             for i, chunk in enumerate(chunks):
                 st.write(f"Processing chunk {i+1} of {len(chunks)} ✅")
