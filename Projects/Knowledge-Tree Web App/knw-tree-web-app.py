@@ -46,17 +46,44 @@ def parse_triples(text):
     triple_pattern = re.compile(r"\((.*?),\s*(.*?),\s*(.*?)\)")
     return [match for match in triple_pattern.findall(text)]
 
+def chunk_text(text, max_chunk_size=1000):
+    # Split text into chunks of max_chunk_size characters, trying to split at sentence boundaries
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    chunks = []
+    current_chunk = ""
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) + 1 <= max_chunk_size:
+            if current_chunk:
+                current_chunk += " " + sentence
+            else:
+                current_chunk = sentence
+        else:
+            if current_chunk:
+                chunks.append(current_chunk)
+            current_chunk = sentence
+    if current_chunk:
+        chunks.append(current_chunk)
+    return chunks
+
 if st.button("Generate Knowledge Graph"):
     if not user_text.strip():
         st.warning("Please enter some text to process.")
     else:
-        response = chain.invoke({"text": user_text})
-        extracted_triples = response.content
-        st.write("**Raw LLM output:**", extracted_triples)
-        triples = parse_triples(extracted_triples)
-        if not triples:
+        all_triples_set = set()
+        chunks = chunk_text(user_text)
+        with st.spinner("Processing text and extracting triples..."):
+            for i, chunk in enumerate(chunks):
+                st.write(f"Processing chunk {i+1} of {len(chunks)}")
+                response = chain.invoke({"text": chunk})
+                extracted_triples = response.content
+                st.write("**Raw LLM output for chunk:**", extracted_triples)
+                triples = parse_triples(extracted_triples)
+                for triple in triples:
+                    all_triples_set.add(triple)
+        if not all_triples_set:
             st.info("No valid triples extracted.")
         else:
+            triples = list(all_triples_set)
             G = nx.DiGraph()
             for subj, pred, obj in triples:
                 G.add_edge(subj.strip(), obj.strip(), label=pred.strip())
